@@ -4,10 +4,10 @@
 //
 //  Created by Peter Lehrer on 3/17/14.
 
-//objectTrackingTutorial.cpp
+//The tracking code is written by  Kyle Hounslow 2013 (objectTrackingTutorial.cpp) http://www.youtube.com/watch?v=bSeFrPrqZ2A
+// https://dl.dropbox.com/u/28096936/tuts/objectTrackingTut.cpp
 
-//The tracking code is written by  Kyle Hounslow 2013
-//Distance code and World coordinates code written by Peter Lehrer 2014
+//3D World coordinates code written by Peter Lehrer 2014
 
 //Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software")
 //, to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -42,35 +42,6 @@ int V_MAX = 256;
 
 int HSV = 0;
 
-// yellow
-/*
- int H_MIN = 20;
- int H_MAX = 30;
- int S_MIN = 100;
- int S_MAX = 255;
- int V_MIN = 100;
- int V_MAX = 255;
- */
-
-// blue -http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_colorspaces/py_colorspaces.html
-/*
- int H_MIN = 86;
- int H_MAX = 130;
- int S_MIN = 50;
- int S_MAX = 255;
- int V_MIN = 50;
- int V_MAX = 255;
- */
-
-//Red laser
-/*
- int H_MIN = 116;
- int H_MAX = 256;
- int S_MIN = 8;
- int S_MAX = 254;
- int V_MIN = 148;
- int V_MAX = 256;
- */
 //default capture width and height
 const int FRAME_WIDTH = 1280;
 const int FRAME_HEIGHT = 720;
@@ -108,7 +79,7 @@ void on_trackbar_switch( int, void*)
 			V_MIN = 176;
 			V_MAX = 256;
 			break;
-		case BLUE :  // blue
+		case BLUE :  // blue -http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_colorspaces/py_colorspaces.html
 			cout << "Blue\n";
 			H_MIN = 86;
 			H_MAX = 130;
@@ -185,8 +156,6 @@ void morphOps(Mat &thresh){
 }
 bool trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed){
 	
-	//int count = 0;
-	
 	Mat temp;
 	threshold.copyTo(temp);
 	//these two vectors needed for output of findContours
@@ -217,14 +186,6 @@ bool trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed){
 				}
 				else objectFound = false;
 			}
-			//let user know you found an object
-			/*
-			 if(objectFound ==true){
-			 putText(cameraFeed,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
-			 //draw object location on screen
-			 drawObject(x,y,cameraFeed);
-			 }
-			 */
 		}
 		else putText(cameraFeed,"TOO MUCH NOISE!",Point(0,50),2,2,Scalar(0,0,255),4);
 	}
@@ -244,7 +205,7 @@ int main(int argc, char* argv[])
 	//Matrix to store each frame of the webcam feed
 	Mat captureFeedRight;
 	Mat captureFeedLeft;
-	Mat captureFeedRightR, captureFeedLeftR;
+	Mat captureFeedRightR, captureFeedLeftR; //to store rectified images
 	//matrix storage for HSV image
 	Mat HSV1;
 	Mat HSV2;
@@ -281,33 +242,16 @@ int main(int argc, char* argv[])
 	
 	captureLeft.set(CV_CAP_PROP_FRAME_WIDTH, FRAME_WIDTH);
 	captureLeft.set(CV_CAP_PROP_FRAME_HEIGHT, FRAME_HEIGHT);
-	
-	
-	//Create background window
-	/*
-	 Mat org;
-	 org = imread("../BackgroundComputerVision_3.jpg");
-	 if (org.empty())
-	 {
-	 cout << "Cannot load image!" << endl;
-	 return -1;
-	 }
-	 namedWindow("Background", CV_WINDOW_AUTOSIZE);
-	 imshow("Background", org);
-	 resizeWindow("Background",1244, 768);
-	 moveWindow("Background",10, 0);
-	 */
+		
 	namedWindow("Left Camera HSV Smoothed and Thresholded Video", 0);
 	namedWindow("Right Camera HSV Smoothed and Thresholded Video", 0);
 	
 	//create window for trackbars
 	namedWindow(trackbarWindowName,0);
-	
-	
+		
 	namedWindow("Left Camera Tracking", 0);  // left xLeft
 	namedWindow("Right Camera Tracking", 0);   // right xRight
-	
-	
+		
 	moveWindow("Right Camera HSV Smoothed and Thresholded Video", 0, 450);
 	moveWindow("Left Camera HSV Smoothed and Thresholded Video", 800, 450);
 	
@@ -339,7 +283,7 @@ int main(int argc, char* argv[])
 	startWindowThread();
 	
 	//*******************************************
-	// Load xml files
+	// Load xml files created by Stereo calibration
 	CvMat* Q   = (CvMat*) cvLoad("/Users/shimon/opencv/PLGlobalCoordinates/Q.xml");
 	CvMat* mx1 = (CvMat*) cvLoad("/Users/shimon/opencv/PLGlobalCoordinates/mx1.xml");
 	CvMat* my1 = (CvMat*) cvLoad("/Users/shimon/opencv/PLGlobalCoordinates/my1.xml");
@@ -352,6 +296,7 @@ int main(int argc, char* argv[])
 		return -1;
 	}
 	
+	//Convert CvMat to Mat
 	Mat Mx1 = mx1;
 	Mat My1 = my1;
 	Mat Mx2 = mx2;
@@ -361,8 +306,6 @@ int main(int argc, char* argv[])
 	vector<Point3d> pointsXYD;
 	vector<Point3d> result3DPoints;
 	
-
-	
 	//start an infinite loop where webcam feed is copied to cameraFeed matrix
 	//all of our operations will be performed within this loop
 	while( key != 'q'){
@@ -370,14 +313,12 @@ int main(int argc, char* argv[])
 		captureRight >> captureFeedRight;    //retrieve image from right camera  camera1
 		captureLeft >> captureFeedLeft;   //retrieve image from left camera, camera2
 		
+		// correct for rectification and lens distortion
 		remap(captureFeedRight, captureFeedRightR, Mx2, My2, INTER_LINEAR);  // right camera
 		remap(captureFeedLeft, captureFeedLeftR, Mx1, My1, INTER_LINEAR);  // left camera
 		
-		
-		
 		//convert frame from BGR to HSV colorspace
-		
-		// Convert color space to HSV as it is much easier to filter colors in the HSV color-space
+		//Converting color space to HSV makes it much easier to filter colors in the HSV color-space
 		cvtColor(captureFeedRightR, HSV1, CV_BGR2HSV);
 		cvtColor(captureFeedLeftR, HSV2, CV_BGR2HSV);
 		
@@ -410,14 +351,12 @@ int main(int argc, char* argv[])
 				d = xLeft - xRight;
 				pointsXYD.push_back(Point3d(xLeft, yLeft, d));
 				perspectiveTransform(pointsXYD, result3DPoints, Q_mat);
-				//z = (1 - avg_error) * result3DPoints.at(0).z;
 				z_3D = result3DPoints.at(0).z;
 				x_3D = result3DPoints.at(0).x;
 				y_3D = result3DPoints.at(0).y;
 			}
 			else // do the matrix math explicitly with out the perspectiveTransform function
 			{
-				//d = xRight - xLeft;  // rightX - leftX
 				d = xLeft - xRight;
 				x_3D = xLeft * Q_mat.at<double>(0,0) + Q_mat.at<double>(0,3);
 				y_3D = yLeft * Q_mat.at<double>(1,1) + Q_mat.at<double>(1,3);
@@ -434,24 +373,11 @@ int main(int argc, char* argv[])
 			drawObject(x_3D, y_3D, xLeft, yRight, z_3D, captureFeedLeftR);
 		}
 		
-		//show frames
-		//imshow(windowName2,threshold);
-		//imshow(windowName,cameraFeed);
-		//imshow(windowName1,HSV);
-		
 		imshow("Right Camera Tracking", captureFeedRightR);
 		imshow("Left Camera Tracking", captureFeedLeftR);
 		
 		imshow("Right Camera HSV Smoothed and Thresholded Video", thresholdRight);
 		imshow("Left Camera HSV Smoothed and Thresholded Video", thresholdLeft);
-		
-		/*
-		 resizeWindow("First Camera Tracking", 427, 240);
-		 resizeWindow("First Camera HSV Smoothed and Thresholded Video", 427, 240);
-		 
-		 resizeWindow("Second Camera Tracking", 427, 240);
-		 resizeWindow("Second Camera HSV Smoothed and Thresholded Video", 427, 240);
-		 */
 		//delay 30ms so that screen can refresh.
 		//image will not appear without this waitKey() command
 		key = waitKey(30);
