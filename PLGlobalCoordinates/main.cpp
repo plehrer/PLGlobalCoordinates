@@ -29,15 +29,15 @@
 using namespace cv;
 using namespace std;
 
-enum { RED, BLUE, YELLOW };
+enum { NEON, PINK, BLUE, YELLOW };
 // Assign initial values to the min and max HSV threshold values to
 // track red
 
-int H_MIN = 159;
-int H_MAX = 256;
-int S_MIN = 127;
-int S_MAX = 256;
-int V_MIN = 176;
+int H_MIN = 111;
+int H_MAX = 156;
+int S_MIN = 137;
+int S_MAX = 255;
+int V_MIN = 163;
 int V_MAX = 256;
 
 int HSV = 0;
@@ -70,7 +70,16 @@ void on_trackbar_switch( int, void*)
 {
 	switch (HSV)
 	{
-		case RED :  // red
+		case NEON :  // Neon outdoors
+			cout << "Neon Outside\n";
+			H_MIN = 111;
+			H_MAX = 156;
+			S_MIN = 137;
+			S_MAX = 255;
+			V_MIN = 163;
+			V_MAX = 256;
+			break;
+		case PINK :  // Pink
 			cout << "Red\n";
 			H_MIN = 159;
 			H_MAX = 256;
@@ -97,6 +106,7 @@ void on_trackbar_switch( int, void*)
 			V_MIN = 100;
 			V_MAX = 255;
 			break;
+			
 	}
 	cout << "H_MIN: " << H_MIN  << " H_MAX: " << H_MAX << " S_MIN: " << S_MIN
 	<< " S_MAX: " << S_MAX << " V_MIN: " << V_MIN << " V_MAX: " << V_MAX << endl;
@@ -248,6 +258,7 @@ int main(int argc, char* argv[])
 	
 	//create window for trackbars
 	namedWindow(trackbarWindowName,0);
+	namedWindow(trackbarSwitchName,0);
 		
 	namedWindow("Left Camera Tracking", 0);  // left xLeft
 	namedWindow("Right Camera Tracking", 0);   // right xRight
@@ -257,8 +268,6 @@ int main(int argc, char* argv[])
 	
 	moveWindow("Right Camera Tracking", 0, 0);
 	moveWindow("Left Camera Tracking", 800, 0);
-	
-	namedWindow(trackbarSwitchName,0);
 	
 	//create memory to store trackbar name on window
 	//create trackbars and insert them into window
@@ -274,10 +283,9 @@ int main(int argc, char* argv[])
 	createTrackbar( "V_MIN", trackbarWindowName, &V_MIN, 255, on_trackbar );
 	createTrackbar( "V_MAX", trackbarWindowName, &V_MAX, 255, on_trackbar );
 	
-	createTrackbar( "Red/Blue/Yellow", trackbarSwitchName, &HSV, 2, on_trackbar_switch );
+	createTrackbar( "N/Pi/B/Y", trackbarSwitchName, &HSV, 3, on_trackbar_switch );
 	
-	//resizeWindow(trackbarWindowName, 320, 1);
-	moveWindow(trackbarWindowName, 465, 170);
+	moveWindow(trackbarWindowName, 75, 170);
 	moveWindow(trackbarSwitchName, 0, 170);
 	
 	startWindowThread();
