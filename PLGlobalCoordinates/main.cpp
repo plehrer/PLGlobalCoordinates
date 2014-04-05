@@ -90,12 +90,18 @@ void on_trackbar_switch( int, void*)
 			break;
 		case BLUE :  // blue -http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_colorspaces/py_colorspaces.html
 			cout << "Blue\n";
-			H_MIN = 86;
-			H_MAX = 130;
-			S_MIN = 50;
+			H_MIN = 109;
+			H_MAX = 194;
+			S_MIN = 137;
 			S_MAX = 255;
-			V_MIN = 50;
+			V_MIN = 115;
 			V_MAX = 255;
+//			H_MIN = 86;
+//			H_MAX = 130;
+//			S_MIN = 50;
+//			S_MAX = 255;
+//			V_MIN = 50;
+//			V_MAX = 255;
 			break;
 		case YELLOW : // yellow
 			cout << "Yellow\n";
@@ -377,10 +383,10 @@ int main(int argc, char* argv[])
 			}
 			//draw object location on screen
 			//putText(captureFeedRightR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
-			putText(captureFeedRightR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D),Point(0,50),2,2,Scalar(0,255,0),4);
+			putText(captureFeedRightR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D)+" centimeters",Point(0,50),2,2,Scalar(0,255,0),4);
 			drawObject(x_3D, y_3D, xRight, yRight, z_3D, captureFeedRightR);  // right camera
 			//putText(captureFeedLeftR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
-			putText(captureFeedLeftR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D),Point(0,50),2,2,Scalar(0,255,0),4);
+			putText(captureFeedLeftR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D)+" centimeters",Point(0,50),2,2,Scalar(0,255,0),4);
 			drawObject(x_3D, y_3D, xLeft, yRight, z_3D, captureFeedLeftR);
 		}
 		
