@@ -31,7 +31,7 @@ using namespace std;
 
 enum { NEON, PINK, BLUE, YELLOW };
 // Assign initial values to the min and max HSV threshold values to
-// track red
+// track magenta outside
 
 int H_MIN = 111;
 int H_MAX = 156;
@@ -88,7 +88,7 @@ void on_trackbar_switch( int, void*)
 			V_MIN = 176;
 			V_MAX = 256;
 			break;
-		case BLUE :  // blue -http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_colorspaces/py_colorspaces.html
+		case BLUE :  //blue
 			cout << "Blue\n";
 			H_MIN = 109;
 			H_MAX = 194;
@@ -96,7 +96,7 @@ void on_trackbar_switch( int, void*)
 			S_MAX = 255;
 			V_MIN = 115;
 			V_MAX = 255;
-//			H_MIN = 86;
+//			H_MIN = 86; //blue - http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_colorspaces/py_colorspaces.html
 //			H_MAX = 130;
 //			S_MIN = 50;
 //			S_MAX = 255;
@@ -114,8 +114,16 @@ void on_trackbar_switch( int, void*)
 			break;
 			
 	}
+	
 	cout << "H_MIN: " << H_MIN  << " H_MAX: " << H_MAX << " S_MIN: " << S_MIN
 	<< " S_MAX: " << S_MAX << " V_MIN: " << V_MIN << " V_MAX: " << V_MAX << endl;
+	
+	setTrackbarPos("H_MIN", trackbarWindowName, H_MIN);
+	setTrackbarPos("H_MIN", trackbarWindowName, H_MAX);
+	setTrackbarPos("S_MIN", trackbarWindowName, S_MIN);
+	setTrackbarPos("S_MAX", trackbarWindowName, S_MAX);
+	setTrackbarPos("V_MIN", trackbarWindowName, V_MIN);
+	setTrackbarPos("V_MAX", trackbarWindowName, V_MAX);
 }
 
 string intToString(int number){
