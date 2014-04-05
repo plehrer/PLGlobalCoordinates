@@ -146,7 +146,8 @@ void drawObject(int x_3D, int y_3D, int x, int y, int z, Mat &frame){
 		line(frame,Point(x,y),Point(FRAME_WIDTH,y),Scalar(0,255,0),2);
 	
 	putText(frame,intToString(x_3D)+", "+intToString(y_3D)+", "+intToString(z),Point(x,y+30),1,1,Scalar(0,255,0),2);
-	putText(frame,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z),Point(5,715),1,2,Scalar(0,255,0),2);
+	//putText(frame,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z),Point(5,715),1,2,Scalar(0,255,0),2);
+putText(frame,"Tracking Object",Point(5,715),1,2,Scalar(0,255,0),4);
 }
 void morphOps(Mat &thresh){
 	
@@ -375,9 +376,11 @@ int main(int argc, char* argv[])
 				z_3D = z_3D / w;
 			}
 			//draw object location on screen
-			putText(captureFeedRightR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
+			//putText(captureFeedRightR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
+			putText(captureFeedRightR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D),Point(0,50),2,2,Scalar(0,255,0),4);
 			drawObject(x_3D, y_3D, xRight, yRight, z_3D, captureFeedRightR);  // right camera
-			putText(captureFeedLeftR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
+			//putText(captureFeedLeftR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
+			putText(captureFeedLeftR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D),Point(0,50),2,2,Scalar(0,255,0),4);
 			drawObject(x_3D, y_3D, xLeft, yRight, z_3D, captureFeedLeftR);
 		}
 		
