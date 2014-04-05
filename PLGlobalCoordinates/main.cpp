@@ -70,8 +70,8 @@ void on_trackbar_switch( int, void*)
 {
 	switch (HSV)
 	{
-		case NEON :  // Neon outdoors
-			cout << "Neon Outside\n";
+		case NEON :  // Magenta outdoors
+			cout << "Magenta Outside\n";
 			H_MIN = 111;
 			H_MAX = 156;
 			S_MIN = 137;
@@ -283,7 +283,7 @@ int main(int argc, char* argv[])
 	createTrackbar( "V_MIN", trackbarWindowName, &V_MIN, 255, on_trackbar );
 	createTrackbar( "V_MAX", trackbarWindowName, &V_MAX, 255, on_trackbar );
 	
-	createTrackbar( "N/Pi/B/Y", trackbarSwitchName, &HSV, 3, on_trackbar_switch );
+	createTrackbar( "M/R/B/Y", trackbarSwitchName, &HSV, 3, on_trackbar_switch );
 	
 	moveWindow(trackbarWindowName, 75, 170);
 	moveWindow(trackbarSwitchName, 0, 170);
