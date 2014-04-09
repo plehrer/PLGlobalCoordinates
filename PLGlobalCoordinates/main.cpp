@@ -29,15 +29,15 @@
 using namespace cv;
 using namespace std;
 
-enum { NEON, PINK, BLUE, YELLOW };
+enum { RED, BLUE, YELLOW, MAGENTA };
 // Assign initial values to the min and max HSV threshold values to
 // track magenta outside
 
-int H_MIN = 111;
-int H_MAX = 156;
-int S_MIN = 137;
-int S_MAX = 255;
-int V_MIN = 163;
+int H_MIN = 159;
+int H_MAX = 256;
+int S_MIN = 127;
+int S_MAX = 256;
+int V_MIN = 176;
 int V_MAX = 256;
 
 int HSV = 0;
@@ -56,167 +56,15 @@ const string trackbarSwitchName = "HSV Red Yellow Blue Switch";
 
 char key = 0;
 
-void on_trackbar( int, void* )
-{//This function gets called whenever a
-	// trackbar position is changed
-	cout << "H_MIN: " << H_MIN  << " H_MAX: " << H_MAX << " S_MIN: " << S_MIN
-	<< " S_MAX: " << S_MAX << " V_MIN: " << V_MIN << " V_MAX: " << V_MAX << endl;
-	
-	
-}
+int showPixels = 0;
 
-// this function gets called when the trackbar switch is changed
-void on_trackbar_switch( int, void*)
-{
-	switch (HSV)
-	{
-		case NEON :  // Magenta outdoors
-			cout << "Magenta Outside\n";
-			H_MIN = 111;
-			H_MAX = 156;
-			S_MIN = 137;
-			S_MAX = 255;
-			V_MIN = 163;
-			V_MAX = 256;
-			break;
-		case PINK :  // Pink
-			cout << "Red\n";
-			H_MIN = 159;
-			H_MAX = 256;
-			S_MIN = 127;
-			S_MAX = 256;
-			V_MIN = 176;
-			V_MAX = 256;
-			break;
-		case BLUE :  //blue
-			cout << "Blue\n";
-			H_MIN = 109;
-			H_MAX = 194;
-			S_MIN = 137;
-			S_MAX = 255;
-			V_MIN = 115;
-			V_MAX = 255;
-//			H_MIN = 86; //blue - http://docs.opencv.org/trunk/doc/py_tutorials/py_imgproc/py_colorspaces/py_colorspaces.html
-//			H_MAX = 130;
-//			S_MIN = 50;
-//			S_MAX = 255;
-//			V_MIN = 50;
-//			V_MAX = 255;
-			break;
-		case YELLOW : // yellow
-			cout << "Yellow\n";
-			H_MIN = 20;
-			H_MAX = 30;
-			S_MIN = 100;
-			S_MAX = 255;
-			V_MIN = 100;
-			V_MAX = 255;
-			break;
-			
-	}
-	
-	cout << "H_MIN: " << H_MIN  << " H_MAX: " << H_MAX << " S_MIN: " << S_MIN
-	<< " S_MAX: " << S_MAX << " V_MIN: " << V_MIN << " V_MAX: " << V_MAX << endl;
-	
-	setTrackbarPos("H_MIN", trackbarWindowName, H_MIN);
-	setTrackbarPos("H_MIN", trackbarWindowName, H_MAX);
-	setTrackbarPos("S_MIN", trackbarWindowName, S_MIN);
-	setTrackbarPos("S_MAX", trackbarWindowName, S_MAX);
-	setTrackbarPos("V_MIN", trackbarWindowName, V_MIN);
-	setTrackbarPos("V_MAX", trackbarWindowName, V_MAX);
-}
+void on_trackbar(int, void*);
+void on_trackbar_switch(int, void*);
+string intToString(int);
+void drawObject(int, int, int, int, int, Mat&);
+void morphOps(Mat&);
+bool trackFilteredObject(int&, int&, Mat, Mat&);
 
-string intToString(int number){
-	std::stringstream ss;
-	ss << number;
-	return ss.str();
-}
-
-void drawObject(int x_3D, int y_3D, int x, int y, int z, Mat &frame){
-	
-	//use some of the openCV drawing functions to draw crosshairs
-	//on your tracked image!
-	
-	//UPDATE:JUNE 18TH, 2013
-	//added 'if' and 'else' statements to prevent
-	//memory errors from writing off the screen (ie. (-25,-25) is not within the window!)
-	
-	circle(frame,Point(x,y),20,Scalar(0,255,0),2);
-	if(y-25>0)
-		line(frame,Point(x,y),Point(x,y-25),Scalar(0,255,0),2);
-	else
-		line(frame,Point(x,y),Point(x,0),Scalar(0,255,0),2);
-	if(y+25<FRAME_HEIGHT)
-		line(frame,Point(x,y),Point(x,y+25),Scalar(0,255,0),2);
-	else
-		line(frame,Point(x,y),Point(x,FRAME_HEIGHT),Scalar(0,255,0),2);
-	if(x-25>0)
-		line(frame,Point(x,y),Point(x-25,y),Scalar(0,255,0),2);
-	else
-		line(frame,Point(x,y),Point(0,y),Scalar(0,255,0),2);
-	if(x+25<FRAME_WIDTH)
-		line(frame,Point(x,y),Point(x+25,y),Scalar(0,255,0),2);
-	else
-		line(frame,Point(x,y),Point(FRAME_WIDTH,y),Scalar(0,255,0),2);
-	
-	putText(frame,intToString(x_3D)+", "+intToString(y_3D)+", "+intToString(z),Point(x,y+30),1,1,Scalar(0,255,0),2);
-	//putText(frame,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z),Point(5,715),1,2,Scalar(0,255,0),2);
-putText(frame,"Tracking Object",Point(5,715),1,2,Scalar(0,255,0),4);
-}
-void morphOps(Mat &thresh){
-	
-	//create structuring element that will be used to "dilate" and "erode" image.
-	//the element chosen here is a 3px by 3px rectangle
-	
-	Mat erodeElement = getStructuringElement( MORPH_RECT,Size(3,3));
-	//dilate with larger element so make sure object is nicely visible
-	Mat dilateElement = getStructuringElement( MORPH_RECT,Size(8,8));
-	
-	erode(thresh,thresh,erodeElement);
-	erode(thresh,thresh,erodeElement);
-	
-	dilate(thresh,thresh,dilateElement);
-	dilate(thresh,thresh,dilateElement);
-	
-}
-bool trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed){
-	
-	Mat temp;
-	threshold.copyTo(temp);
-	//these two vectors needed for output of findContours
-	vector< vector<Point> > contours;
-	vector<Vec4i> hierarchy;
-	//find contours of filtered image using openCV findContours function
-	findContours(temp,contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );
-	//use moments method to find our filtered object
-	double refArea = 0;
-	bool objectFound = false;
-	if (hierarchy.size() > 0) {
-		unsigned long numObjects = hierarchy.size();
-		//if number of objects greater than MAX_NUM_OBJECTS we have a noisy filter
-		if(numObjects<MAX_NUM_OBJECTS){
-			for (int index = 0; index >= 0; index = hierarchy[index][0]) {
-				//count++;
-				Moments moment = moments((cv::Mat)contours[index]);
-				double area = moment.m00;
-				
-				//if the area is less than 20 px by 20px then it is probably just noise
-				//if the area is the same as the 3/2 of the image size, probably just a bad filter
-				//we only want the object with the largest area so we save a reference area each
-				//iteration and compare it to the area in the next iteration.
-				if(area>MIN_OBJECT_AREA && area<MAX_OBJECT_AREA && area>refArea){
-					x = moment.m10/area;
-					y = moment.m01/area;
-					objectFound = true;
-				}
-				else objectFound = false;
-			}
-		}
-		else putText(cameraFeed,"TOO MUCH NOISE!",Point(0,50),2,2,Scalar(0,0,255),4);
-	}
-	//cout << "Count for loop: " << count << endl;
-	return objectFound;
-}
 
 int main(int argc, char* argv[])
 {
@@ -275,14 +123,14 @@ int main(int argc, char* argv[])
 	namedWindow(trackbarWindowName,0);
 	namedWindow(trackbarSwitchName,0);
 		
-	namedWindow("Left Camera Tracking", 0);  // left xLeft
 	namedWindow("Right Camera Tracking", 0);   // right xRight
+	namedWindow("Left Camera Tracking", 0);  // left xLeft
 		
 	moveWindow("Right Camera HSV Smoothed and Thresholded Video", 0, 450);
 	moveWindow("Left Camera HSV Smoothed and Thresholded Video", 800, 450);
 	
-	moveWindow("Right Camera Tracking", 0, 0);
-	moveWindow("Left Camera Tracking", 800, 0);
+	moveWindow("Right Camera Tracking", 700, 0);
+	moveWindow("Left Camera Tracking", 0, 0);
 	
 	//create memory to store trackbar name on window
 	//create trackbars and insert them into window
@@ -298,10 +146,11 @@ int main(int argc, char* argv[])
 	createTrackbar( "V_MIN", trackbarWindowName, &V_MIN, 255, on_trackbar );
 	createTrackbar( "V_MAX", trackbarWindowName, &V_MAX, 255, on_trackbar );
 	
-	createTrackbar( "M/R/B/Y", trackbarSwitchName, &HSV, 3, on_trackbar_switch );
+	createTrackbar( "R/B/Y/M", trackbarSwitchName, &HSV, 3, on_trackbar_switch );
+	createTrackbar("Cm/Pixels", trackbarSwitchName, &showPixels, 1, on_trackbar_switch);
 	
-	moveWindow(trackbarWindowName, 75, 170);
-	moveWindow(trackbarSwitchName, 0, 170);
+	moveWindow(trackbarWindowName, 400, 775);
+	moveWindow(trackbarSwitchName, 10, 760);
 	
 	startWindowThread();
 	
@@ -390,11 +239,7 @@ int main(int argc, char* argv[])
 				z_3D = z_3D / w;
 			}
 			//draw object location on screen
-			//putText(captureFeedRightR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
-			putText(captureFeedRightR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D)+" centimeters",Point(0,50),2,2,Scalar(0,255,0),4);
-			drawObject(x_3D, y_3D, xRight, yRight, z_3D, captureFeedRightR);  // right camera
-			//putText(captureFeedLeftR,"Tracking Object",Point(0,50),2,2,Scalar(0,255,0),4);
-			putText(captureFeedLeftR,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z_3D)+" centimeters",Point(0,50),2,2,Scalar(0,255,0),4);
+			drawObject(x_3D, y_3D, xRight, yRight, z_3D, captureFeedRightR);
 			drawObject(x_3D, y_3D, xLeft, yRight, z_3D, captureFeedLeftR);
 		}
 		
@@ -411,3 +256,171 @@ int main(int argc, char* argv[])
 	destroyAllWindows();
 	return 0;
 }
+
+void on_trackbar(int, void* )
+{//This function gets called whenever a
+	// trackbar position is changed
+	cout << "H_MIN: " << H_MIN  << " H_MAX: " << H_MAX << " S_MIN: " << S_MIN
+	<< " S_MAX: " << S_MAX << " V_MIN: " << V_MIN << " V_MAX: " << V_MAX << endl;
+	
+	
+}
+
+// this function gets called when the trackbar switch is changed
+void on_trackbar_switch(int, void*)
+{
+	switch (HSV)
+	{
+			
+		case RED :  // Red
+			cout << "Red\n";
+			H_MIN = 159;
+			H_MAX = 256;
+			S_MIN = 127;
+			S_MAX = 256;
+			V_MIN = 176;
+			V_MAX = 256;
+			break;
+		case BLUE :  //blue
+			cout << "Blue\n";
+			H_MIN = 96;
+			H_MAX = 255;
+			S_MIN = 253;
+			S_MAX = 255;
+			V_MIN = 140;
+			V_MAX = 253;
+			break;
+		case YELLOW : // yellow
+			cout << "Yellow\n";
+			H_MIN = 20;
+			H_MAX = 30;
+			S_MIN = 100;
+			S_MAX = 255;
+			V_MIN = 100;
+			V_MAX = 255;
+			break;
+		case MAGENTA :  // Magenta outdoors
+			cout << "Magenta Outside\n";
+			H_MIN = 111;
+			H_MAX = 156;
+			S_MIN = 137;
+			S_MAX = 255;
+			V_MIN = 163;
+			V_MAX = 256;
+			break;
+			
+	}
+	
+	cout << "H_MIN: " << H_MIN  << " H_MAX: " << H_MAX << " S_MIN: " << S_MIN
+	<< " S_MAX: " << S_MAX << " V_MIN: " << V_MIN << " V_MAX: " << V_MAX << endl;
+	
+	setTrackbarPos("H_MIN", trackbarWindowName, H_MIN);
+	setTrackbarPos("H_MIN", trackbarWindowName, H_MAX);
+	setTrackbarPos("S_MIN", trackbarWindowName, S_MIN);
+	setTrackbarPos("S_MAX", trackbarWindowName, S_MAX);
+	setTrackbarPos("V_MIN", trackbarWindowName, V_MIN);
+	setTrackbarPos("V_MAX", trackbarWindowName, V_MAX);
+}
+
+string intToString(int number){
+	std::stringstream ss;
+	ss << number;
+	return ss.str();
+}
+
+void drawObject(int x_3D, int y_3D, int x, int y, int z, Mat &frame){
+	
+	//use some of the openCV drawing functions to draw crosshairs
+	//on your tracked image!
+	
+	//UPDATE:JUNE 18TH, 2013
+	//added 'if' and 'else' statements to prevent
+	//memory errors from writing off the screen (ie. (-25,-25) is not within the window!)
+	
+	circle(frame,Point(x,y),20,Scalar(0,255,0),2);
+	if(y-25>0)
+		line(frame,Point(x,y),Point(x,y-25),Scalar(0,255,0),2);
+	else
+		line(frame,Point(x,y),Point(x,0),Scalar(0,255,0),2);
+	if(y+25<FRAME_HEIGHT)
+		line(frame,Point(x,y),Point(x,y+25),Scalar(0,255,0),2);
+	else
+		line(frame,Point(x,y),Point(x,FRAME_HEIGHT),Scalar(0,255,0),2);
+	if(x-25>0)
+		line(frame,Point(x,y),Point(x-25,y),Scalar(0,255,0),2);
+	else
+		line(frame,Point(x,y),Point(0,y),Scalar(0,255,0),2);
+	if(x+25<FRAME_WIDTH)
+		line(frame,Point(x,y),Point(x+25,y),Scalar(0,255,0),2);
+	else
+		line(frame,Point(x,y),Point(FRAME_WIDTH,y),Scalar(0,255,0),2);
+	
+	if (showPixels) {
+		putText(frame,intToString(x)+", "+intToString(y)+", "+intToString(z),Point(x,y+30),1,1,Scalar(0,255,0),2);
+		putText(frame,"x = "+intToString(x)+","+"y = "+intToString(y)+", z = "+intToString(z)+" centimeters",Point(5,50),2,2,Scalar(0,255,0),2);
+	} else {
+		putText(frame,intToString(x_3D)+", "+intToString(y_3D)+", "+intToString(z),Point(x,y+30),1,1,Scalar(0,255,0),2);
+		putText(frame,"x = "+intToString(x_3D)+","+"y = "+intToString(y_3D)+", z = "+intToString(z)+" centimeters",Point(5,50),2,2,Scalar(0,255,0),2);
+	}
+	if (x < 300 && y > 600) {
+		putText(frame,"Tracking Object",Point(600,700),1,2,Scalar(0,255,0),4);
+	} else {
+		putText(frame,"Tracking Object",Point(5,700),1,2,Scalar(0,255,0),4);
+	}
+	
+}
+void morphOps(Mat &thresh){
+	
+	//create structuring element that will be used to "dilate" and "erode" image.
+	//the element chosen here is a 3px by 3px rectangle
+	
+	Mat erodeElement = getStructuringElement( MORPH_RECT,Size(3,3));
+	//dilate with larger element so make sure object is nicely visible
+	Mat dilateElement = getStructuringElement( MORPH_RECT,Size(8,8));
+	
+	erode(thresh,thresh,erodeElement);
+	erode(thresh,thresh,erodeElement);
+	
+	dilate(thresh,thresh,dilateElement);
+	dilate(thresh,thresh,dilateElement);
+	
+}
+bool trackFilteredObject(int &x, int &y, Mat threshold, Mat &cameraFeed){
+	
+	Mat temp;
+	threshold.copyTo(temp);
+	//these two vectors needed for output of findContours
+	vector< vector<Point> > contours;
+	vector<Vec4i> hierarchy;
+	//find contours of filtered image using openCV findContours function
+	findContours(temp,contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );
+	//use moments method to find our filtered object
+	double refArea = 0;
+	bool objectFound = false;
+	if (hierarchy.size() > 0) {
+		unsigned long numObjects = hierarchy.size();
+		//if number of objects greater than MAX_NUM_OBJECTS we have a noisy filter
+		if(numObjects<MAX_NUM_OBJECTS){
+			for (int index = 0; index >= 0; index = hierarchy[index][0]) {
+				//count++;
+				Moments moment = moments((cv::Mat)contours[index]);
+				double area = moment.m00;
+				
+				//if the area is less than 20 px by 20px then it is probably just noise
+				//if the area is the same as the 3/2 of the image size, probably just a bad filter
+				//we only want the object with the largest area so we save a reference area each
+				//iteration and compare it to the area in the next iteration.
+				if(area>MIN_OBJECT_AREA && area<MAX_OBJECT_AREA && area>refArea){
+					x = moment.m10/area;
+					y = moment.m01/area;
+					objectFound = true;
+				}
+				else objectFound = false;
+			}
+		}
+		else putText(cameraFeed,"TOO MUCH NOISE!",Point(0,50),2,2,Scalar(0,0,255),4);
+	}
+	//cout << "Count for loop: " << count << endl;
+	return objectFound;
+}
+
