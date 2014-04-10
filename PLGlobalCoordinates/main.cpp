@@ -60,6 +60,7 @@ int showPixels = 0;
 
 void on_trackbar(int, void*);
 void on_trackbar_switch(int, void*);
+void on_trackbar_switch_pixels(int, void*);
 string intToString(int);
 void drawObject(int, int, int, int, int, Mat&);
 void morphOps(Mat&);
@@ -72,7 +73,7 @@ int main(int argc, char* argv[])
 	//program
 	bool trackObjects = true;
 	bool useMorphOps = true;
-	bool matrixMath = false;  // use perspectiveTransform to do matrix math
+	int matrixMath = 0;  // use perspectiveTransform to do matrix math
 	bool trackObjectCamera1 = false, trackObjectCamera2 = false;
 	
 	//Matrix to store each frame of the webcam feed
@@ -147,10 +148,11 @@ int main(int argc, char* argv[])
 	createTrackbar( "V_MAX", trackbarWindowName, &V_MAX, 255, on_trackbar );
 	
 	createTrackbar( "R/B/Y/M", trackbarSwitchName, &HSV, 3, on_trackbar_switch );
-	createTrackbar("Cm/Pixels", trackbarSwitchName, &showPixels, 1, on_trackbar_switch);
+	createTrackbar("Cm/Pixels", trackbarSwitchName, &showPixels, 1, on_trackbar_switch_pixels);
+	createTrackbar("Mat Math Off/On", trackbarSwitchName, &matrixMath, 1);
 	
 	moveWindow(trackbarWindowName, 400, 775);
-	moveWindow(trackbarSwitchName, 10, 760);
+	moveWindow(trackbarSwitchName, 1000, 730);
 	
 	startWindowThread();
 	
@@ -232,8 +234,8 @@ int main(int argc, char* argv[])
 				d = xLeft - xRight;
 				x_3D = xLeft * Q_mat.at<double>(0,0) + Q_mat.at<double>(0,3);
 				y_3D = yLeft * Q_mat.at<double>(1,1) + Q_mat.at<double>(1,3);
-				z_3D = Q_mat.at<double>(2,3); // assign focal lenght
-				w = d * Q_mat.at<double>(3,2) + Q_mat.at<double>(3,3);
+				z_3D = Q_mat.at<double>(2,3); // assign focal length
+				w = d * Q_mat.at<double>(3,2) + Q_mat.at<double>(3,3);  // Homogenuous coordinate scaling
 				x_3D = x_3D / w;
 				y_3D = y_3D / w;
 				z_3D = z_3D / w;
@@ -294,7 +296,7 @@ void on_trackbar_switch(int, void*)
 			cout << "Yellow\n";
 			H_MIN = 20;
 			H_MAX = 30;
-			S_MIN = 100;
+			S_MIN = 183;  //100
 			S_MAX = 255;
 			V_MIN = 100;
 			V_MAX = 255;
@@ -320,6 +322,10 @@ void on_trackbar_switch(int, void*)
 	setTrackbarPos("S_MAX", trackbarWindowName, S_MAX);
 	setTrackbarPos("V_MIN", trackbarWindowName, V_MIN);
 	setTrackbarPos("V_MAX", trackbarWindowName, V_MAX);
+}
+
+void on_trackbar_switch_pixels(int, void*) {
+	
 }
 
 string intToString(int number){
