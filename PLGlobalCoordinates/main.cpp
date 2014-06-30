@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	//program
 	bool trackObjects = true;
 	bool useMorphOps = true;
-	int matrixMath = 0;  // use perspectiveTransform to do matrix math
+	int matrixMath = 1;  // use perspectiveTransform to do matrix math
 	bool trackObjectCamera1 = false, trackObjectCamera2 = false;
 	
 	//Matrix to store each frame of the webcam feed
