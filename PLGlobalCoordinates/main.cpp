@@ -252,9 +252,18 @@ int main(int argc, char* argv[])
 		imshow("Left Camera HSV Smoothed and Thresholded Video", thresholdLeft);
 		//delay 30ms so that screen can refresh.
 		//image will not appear without this waitKey() command
-		key = waitKey(30);
+		key = waitKey(1);
+		captureFeedLeft.release();
+		captureFeedRight.release();
+		captureFeedLeftR.release();
+		captureFeedRightR.release();
 	}
-	
+	captureLeft.release();
+	captureFeedRight.release();
+	captureFeedLeft.release();
+	captureFeedRight.release();
+	captureFeedLeftR.release();
+	captureFeedRightR.release();
 	destroyAllWindows();
 	return 0;
 }
