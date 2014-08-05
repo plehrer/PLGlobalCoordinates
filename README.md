@@ -1,9 +1,9 @@
-PL3DGlobalCoordinates
+PL3GlobalCoordinates
 =====================
 
 ###Global Coordinate Object Tracking and Finding Program
 
-This program uses OpenCV version 2.4.8 to track a colored object and find the 
+This program uses OpenCV version 2.4.9 to track a colored object and find the 
 3D global coordinates. Red, Blue or Yellow can be set from a switch.  Before
 running this program you must calibrate a stereo camera to get the appropriate matrices.
 
